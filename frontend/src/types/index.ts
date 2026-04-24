@@ -48,6 +48,13 @@ export interface ProjectCommands {
   test?: string;
 }
 
+export interface StartCommand {
+  name: string;
+  cwd: string;
+  command: string;
+  url?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -55,9 +62,29 @@ export interface Project {
   github?: string;
   localPath?: string;
   type: string;
+  enabled?: boolean;
   commands?: ProjectCommands;
+  startCommands?: StartCommand[];
   url?: string;
   publicUrl?: string;
+}
+
+// ─── System management types ──────────────────────────────────────────────────
+
+export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped';
+
+export interface ManagedService {
+  id: string;
+  projectId: string;
+  projectName: string;
+  serviceName: string;
+  command: string;
+  url?: string;
+  status: ServiceStatus;
+  pid?: number;
+  startedAt: string;
+  logLines: string[];
+  error?: string;
 }
 
 export interface LogEntry {
@@ -70,4 +97,6 @@ export interface LogEntry {
 export type WSMessage =
   | { type: 'connected'; message: string }
   | { type: 'log'; runId: string; level: LogEntry['level']; message: string; timestamp: string }
-  | { type: 'result'; runId: string; projectId: string; data: QAResult };
+  | { type: 'result'; runId: string; projectId: string; data: QAResult }
+  | { type: 'system_status'; services: ManagedService[] }
+  | { type: 'system_progress'; step: number; total: number; message: string };

@@ -7,10 +7,19 @@
       "github": "https://github.com/liemdo28/bakudanwebsite_sub",
       "localPath": "E:\\Project\\Master\\BakudanWebsite_Sub",
       "type": "website",
+      "enabled": true,
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
+      "startCommands": [
+        {
+          "name": "Dev Server",
+          "cwd": "E:\\Project\\Master\\BakudanWebsite_Sub",
+          "command": "npm run dev -- --port 5001",
+          "url": "http://localhost:5001"
+        }
+      ],
       "url": "https://www.bakudanramen.com",
       "publicUrl": "https://www.bakudanramen.com",
       "adminUrl": "https://www.bakudanramen.com/links-admin/#/dashboard",
@@ -23,10 +32,19 @@
       "github": "https://github.com/liemdo28/rawwebsite",
       "localPath": "E:\\Project\\Master\\RawWebsite",
       "type": "website",
+      "enabled": true,
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
+      "startCommands": [
+        {
+          "name": "Dev Server",
+          "cwd": "E:\\Project\\Master\\RawWebsite",
+          "command": "npm run dev -- --port 5002",
+          "url": "http://localhost:5002"
+        }
+      ],
       "url": "https://rawsushibar.com",
       "publicUrl": "https://rawsushibar.com",
       "testLevels": ["source", "build", "ui", "seo", "stress"]
@@ -38,10 +56,19 @@
       "github": "https://github.com/liemdo28/dashboard.bakudanramen.com",
       "localPath": "E:\\Project\\Master\\dashboard.bakudanramen.com",
       "type": "dashboard",
+      "enabled": true,
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
+      "startCommands": [
+        {
+          "name": "Dev Server",
+          "cwd": "E:\\Project\\Master\\dashboard.bakudanramen.com",
+          "command": "npm run dev -- --port 5003",
+          "url": "http://localhost:5003"
+        }
+      ],
       "url": "https://dashboard.bakudanramen.com",
       "publicUrl": "https://dashboard.bakudanramen.com",
       "testLevels": ["source", "build", "ui", "api", "role", "stress"]
@@ -53,10 +80,19 @@
       "github": "https://github.com/liemdo28/review-automation-system",
       "localPath": "E:\\Project\\Master\\review-automation-system",
       "type": "internal-tool",
+      "enabled": true,
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
+      "startCommands": [
+        {
+          "name": "Dev Server",
+          "cwd": "E:\\Project\\Master\\review-automation-system",
+          "command": "npm run dev -- --port 5004",
+          "url": "http://localhost:5004"
+        }
+      ],
       "testLevels": ["source", "build", "ui", "role", "stress"]
     },
     {
@@ -66,10 +102,19 @@
       "github": "https://github.com/liemdo28/packing-list",
       "localPath": "E:\\Project\\Master\\packing-list",
       "type": "operation-system",
+      "enabled": true,
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
+      "startCommands": [
+        {
+          "name": "Dev Server",
+          "cwd": "E:\\Project\\Master\\packing-list",
+          "command": "npm run dev -- --port 5005",
+          "url": "http://localhost:5005"
+        }
+      ],
       "testLevels": ["source", "build", "ui", "api", "role", "stress"]
     }
   ]

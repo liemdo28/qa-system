@@ -6,16 +6,18 @@ import { wsEmitter } from './services/wsEmitter';
 import projectsRouter from './controllers/projectsController';
 import runRouter from './controllers/runController';
 import resultsRouter from './controllers/resultsController';
+import systemRouter from './controllers/systemController';
 
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:3000'] }));
+app.use(cors({ origin: true })); // allow all localhost origins for internal tool
 app.use(express.json());
 
 app.use('/api/projects', projectsRouter);
 app.use('/api/run', runRouter);
 app.use('/api/results', resultsRouter);
+app.use('/api/system', systemRouter);
 
 app.get('/api', (_req, res) => {
   res.json({

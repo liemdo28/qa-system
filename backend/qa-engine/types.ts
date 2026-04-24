@@ -77,4 +77,34 @@ export interface ResultMessage {
   data: QAResult;
 }
 
-export type WSMessage = LogMessage | ResultMessage;
+// ─── System management types ────────────────────────────────────────────────
+
+export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped';
+
+export interface ManagedService {
+  id: string;
+  projectId: string;
+  projectName: string;
+  serviceName: string;
+  command: string;
+  url?: string;
+  status: ServiceStatus;
+  pid?: number;
+  startedAt: string;
+  logLines: string[];
+  error?: string;
+}
+
+export interface SystemStatusMessage {
+  type: 'system_status';
+  services: ManagedService[];
+}
+
+export interface SystemProgressMessage {
+  type: 'system_progress';
+  step: number;
+  total: number;
+  message: string;
+}
+
+export type WSMessage = LogMessage | ResultMessage | SystemStatusMessage | SystemProgressMessage;

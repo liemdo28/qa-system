@@ -1,4 +1,4 @@
-import { Project, QAResult } from '../types';
+import { Project, QAResult, ManagedService } from '../types';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
@@ -36,5 +36,23 @@ export const api = {
 
   runQA(projectId: string): Promise<{ runId: string; projectId: string }> {
     return post(`/run/${projectId}`);
+  },
+
+  system: {
+    start(): Promise<{ status: string; projectCount: number }> {
+      return post('/system/start');
+    },
+    stop(): Promise<{ status: string }> {
+      return post('/system/stop');
+    },
+    stopService(serviceId: string): Promise<{ status: string }> {
+      return post(`/system/stop/${encodeURIComponent(serviceId)}`);
+    },
+    status(): Promise<{ status: string; services: ManagedService[] }> {
+      return get('/system/status');
+    },
+    logs(serviceId: string): Promise<{ logs: string[] }> {
+      return get(`/system/logs/${encodeURIComponent(serviceId)}`);
+    },
   },
 };

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Project, QAResult, LogEntry, WSMessage } from '../types';
+import { Project, QAResult, LogEntry, WSMessage, ManagedService } from '../types';
 import { api } from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { ProjectCard } from '../components/ProjectCard';
@@ -7,18 +7,26 @@ import { StatusBadge } from '../components/StatusBadge';
 import { ChecksGrid } from '../components/ChecksGrid';
 import { IssueList } from '../components/IssueList';
 import { LogStream } from '../components/LogStream';
+import { StartPanel } from '../components/StartPanel';
+import { LogModal } from '../components/LogModal';
 
 interface Props {
   projects: Project[];
 }
 
 export function Dashboard({ projects }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(projects[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, QAResult>>({});
   const [running, setRunning] = useState<Set<string>>(new Set());
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // System state
+  const [systemServices, setSystemServices] = useState<ManagedService[]>([]);
+  const [systemProgress, setSystemProgress] = useState<{ step: number; total: number; message: string } | null>(null);
+  const [isSystemStarting, setIsSystemStarting] = useState(false);
+  const [logModal, setLogModal] = useState<{ serviceId: string; title: string; logs: string[] } | null>(null);
 
   const handleWsMessage = useCallback((msg: WSMessage) => {
     if (msg.type === 'log') {
@@ -34,6 +42,15 @@ export function Dashboard({ projects }: Props) {
     } else if (msg.type === 'result') {
       setResults((prev) => ({ ...prev, [msg.projectId]: msg.data }));
       setRunning((prev) => { const s = new Set(prev); s.delete(msg.projectId); return s; });
+    } else if (msg.type === 'system_status') {
+      setSystemServices(msg.services);
+      const anyStarting = msg.services.some((s) => s.status === 'starting');
+      if (!anyStarting) {
+        setIsSystemStarting(false);
+        setSystemProgress(null);
+      }
+    } else if (msg.type === 'system_progress') {
+      setSystemProgress({ step: msg.step, total: msg.total, message: msg.message });
     }
   }, [activeRunId]);
 
@@ -54,6 +71,46 @@ export function Dashboard({ projects }: Props) {
       setRunning((prev) => { const s = new Set(prev); s.delete(projectId); return s; });
     }
   }, []);
+
+  const handleSystemStart = useCallback(async () => {
+    setIsSystemStarting(true);
+    setSystemProgress({ step: 0, total: 4, message: 'Initializing…' });
+    try {
+      await api.system.start();
+    } catch (e) {
+      setError(String(e));
+      setIsSystemStarting(false);
+      setSystemProgress(null);
+    }
+  }, []);
+
+  const handleSystemStop = useCallback(async () => {
+    try {
+      await api.system.stop();
+      setSystemServices([]);
+    } catch (e) {
+      setError(String(e));
+    }
+  }, []);
+
+  const handleStopService = useCallback(async (serviceId: string) => {
+    try {
+      await api.system.stopService(serviceId);
+    } catch (e) {
+      setError(String(e));
+    }
+  }, []);
+
+  const handleViewLogs = useCallback(async (service: ManagedService) => {
+    try {
+      const { logs: lines } = await api.system.logs(service.id);
+      setLogModal({ serviceId: service.id, title: service.serviceName, logs: lines });
+    } catch {
+      setLogModal({ serviceId: service.id, title: service.serviceName, logs: service.logLines });
+    }
+  }, []);
+
+  const hasRunningServices = systemServices.some((s) => s.status === 'running' || s.status === 'starting');
 
   const selectedProject = projects.find((p) => p.id === selectedId);
   const selectedResult = selectedId ? results[selectedId] : undefined;
@@ -86,17 +143,23 @@ export function Dashboard({ projects }: Props) {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              result={results[project.id]}
-              isRunning={running.has(project.id)}
-              isSelected={selectedId === project.id}
-              onSelect={() => setSelectedId(project.id)}
-              onRun={() => void handleRun(project.id)}
-            />
-          ))}
+          {projects.map((project) => {
+            const projectServices = systemServices.filter((s) => s.projectId === project.id);
+            return (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                result={results[project.id]}
+                isRunning={running.has(project.id)}
+                isSelected={selectedId === project.id}
+                services={projectServices}
+                onSelect={() => setSelectedId(project.id)}
+                onRun={() => void handleRun(project.id)}
+                onViewLogs={(svc) => void handleViewLogs(svc)}
+                onStopService={(id) => void handleStopService(id)}
+              />
+            );
+          })}
         </div>
 
         <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b' }}>
@@ -127,9 +190,14 @@ export function Dashboard({ projects }: Props) {
       {/* ── Main content ── */}
       <main style={{ flex: 1, overflowY: 'auto', background: '#f8fafc' }}>
         {!selectedProject ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: 14 }}>
-            Select a project to view results
-          </div>
+          <StartPanel
+            projectCount={projects.length}
+            isStarting={isSystemStarting}
+            progress={systemProgress}
+            hasRunningServices={hasRunningServices}
+            onStart={() => void handleSystemStart()}
+            onStop={() => void handleSystemStop()}
+          />
         ) : (
           <div style={{ padding: 28, maxWidth: 860 }}>
 
@@ -210,6 +278,15 @@ export function Dashboard({ projects }: Props) {
           </div>
         )}
       </main>
+
+      {/* ── Log Modal ── */}
+      {logModal && (
+        <LogModal
+          title={logModal.title}
+          logs={logModal.logs}
+          onClose={() => setLogModal(null)}
+        />
+      )}
     </div>
   );
 }
