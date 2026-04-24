@@ -1,95 +1,89 @@
 {
   "projects": [
     {
-      "id": "bakudan-website",
-      "name": "Bakudan Website",
-      "repo": "https://github.com/liemdo28/bakudanwebsite_sub",
-      "github": "https://github.com/liemdo28/bakudanwebsite_sub",
-      "localPath": "E:/Project/Master/BakudanWebsite_Sub",
-      "type": "website",
+      "id": "bakudan-dashboard",
+      "name": "Bakudan Dashboard",
       "enabled": true,
-      "commands": {
-        "install": "npm install",
-        "build": "npm run build"
+      "localPath": "E:/Project/Master/dashboard.bakudanramen.com",
+      "repo": "https://github.com/liemdo28/dashboard.bakudanramen.com",
+      "url": "https://dashboard.bakudanramen.com",
+      "type": "php-static",
+      "build": {
+        "enabled": false
       },
-      "startCommands": [
+      "services": [
         {
-          "name": "Dev Server",
-          "cwd": "E:/Project/Master/BakudanWebsite_Sub",
-          "command": "npm run dev -- --port 5001",
-          "url": "http://localhost:5001"
+          "name": "Dashboard Preview",
+          "command": "npx serve . -l 5180",
+          "cwd": "E:/Project/Master/dashboard.bakudanramen.com",
+          "url": "http://localhost:5180"
         }
       ],
-      "url": "https://www.bakudanramen.com",
-      "publicUrl": "https://www.bakudanramen.com",
-      "adminUrl": "https://www.bakudanramen.com/links-admin/#/dashboard",
-      "testLevels": ["source", "build", "ui", "role", "stress"]
+      "testLevels": ["source", "ui", "api", "role", "stress"]
+    },
+    {
+      "id": "bakudan-website",
+      "name": "Bakudan Website Sub",
+      "enabled": true,
+      "localPath": "E:/Project/Master/BakudanWebsite_Sub",
+      "repo": "https://github.com/liemdo28/bakudanwebsite_sub",
+      "url": "https://rim.bakudanramen.com",
+      "type": "static",
+      "build": {
+        "enabled": false
+      },
+      "services": [
+        {
+          "name": "Static Preview",
+          "command": "npx serve . -l 5181",
+          "cwd": "E:/Project/Master/BakudanWebsite_Sub",
+          "url": "http://localhost:5181"
+        }
+      ],
+      "testLevels": ["source", "ui", "role", "stress"]
     },
     {
       "id": "raw-website",
       "name": "Raw Sushi Website",
-      "repo": "https://github.com/liemdo28/rawwebsite",
-      "github": "https://github.com/liemdo28/rawwebsite",
+      "enabled": true,
       "localPath": "E:/Project/Master/RawWebsite",
-      "type": "website",
-      "enabled": true,
-      "commands": {
-        "install": "npm install",
-        "build": "npm run build"
-      },
-      "startCommands": [
-        {
-          "name": "Dev Server",
-          "cwd": "E:/Project/Master/RawWebsite",
-          "command": "npm run dev -- --port 5002",
-          "url": "http://localhost:5002"
-        }
-      ],
+      "repo": "https://github.com/liemdo28/rawwebsite",
       "url": "https://rawsushibar.com",
-      "publicUrl": "https://rawsushibar.com",
-      "testLevels": ["source", "build", "ui", "seo", "stress"]
-    },
-    {
-      "id": "bakudan-dashboard",
-      "name": "Bakudan Dashboard",
-      "repo": "https://github.com/liemdo28/dashboard.bakudanramen.com",
-      "github": "https://github.com/liemdo28/dashboard.bakudanramen.com",
-      "localPath": "E:/Project/Master/dashboard.bakudanramen.com",
-      "type": "dashboard",
-      "enabled": true,
+      "type": "static",
       "build": {
         "enabled": false
       },
-      "startCommands": [
+      "services": [
         {
-          "name": "Dev Server",
-          "cwd": "E:/Project/Master/dashboard.bakudanramen.com",
-          "command": "npm run dev -- --port 5003",
-          "url": "http://localhost:5003"
+          "name": "Raw Website Preview",
+          "command": "npx serve . -l 5182",
+          "cwd": "E:/Project/Master/RawWebsite",
+          "url": "http://localhost:5182"
         }
       ],
-      "url": "https://dashboard.bakudanramen.com",
-      "publicUrl": "https://dashboard.bakudanramen.com",
-      "testLevels": ["source", "build", "ui", "api", "role", "stress"]
+      "testLevels": ["source", "ui", "seo", "stress"]
     },
     {
       "id": "review-automation",
       "name": "Review Automation System",
-      "repo": "https://github.com/liemdo28/review-automation-system",
-      "github": "https://github.com/liemdo28/review-automation-system",
-      "localPath": "E:/Project/Master/review-automation-system",
-      "type": "internal-tool",
       "enabled": true,
+      "localPath": "E:/Project/Master/review-automation-system",
+      "repo": "https://github.com/liemdo28/review-automation-system",
+      "url": "http://localhost:5183",
+      "type": "auto",
+      "build": {
+        "enabled": true
+      },
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
-      "startCommands": [
+      "services": [
         {
-          "name": "Dev Server",
+          "name": "Review UI",
+          "command": "npm run dev",
           "cwd": "E:/Project/Master/review-automation-system",
-          "command": "npm run dev -- --port 5004",
-          "url": "http://localhost:5004"
+          "url": "http://localhost:5183"
         }
       ],
       "testLevels": ["source", "build", "ui", "role", "stress"]
@@ -97,21 +91,24 @@
     {
       "id": "packing-list",
       "name": "Packing List",
-      "repo": "https://github.com/liemdo28/packing-list",
-      "github": "https://github.com/liemdo28/packing-list",
-      "localPath": "E:/Project/Master/packing-list",
-      "type": "operation-system",
       "enabled": true,
+      "localPath": "E:/Project/Master/packing-list",
+      "repo": "https://github.com/liemdo28/packing-list",
+      "url": "http://localhost:5184",
+      "type": "auto",
+      "build": {
+        "enabled": true
+      },
       "commands": {
         "install": "npm install",
         "build": "npm run build"
       },
-      "startCommands": [
+      "services": [
         {
-          "name": "Dev Server",
+          "name": "Packing List UI",
+          "command": "npm run dev",
           "cwd": "E:/Project/Master/packing-list",
-          "command": "npm run dev -- --port 5005",
-          "url": "http://localhost:5005"
+          "url": "http://localhost:5184"
         }
       ],
       "testLevels": ["source", "build", "ui", "api", "role", "stress"]

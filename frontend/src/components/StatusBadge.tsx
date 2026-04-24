@@ -1,16 +1,17 @@
 import { RunStatus, CheckStatus } from '../types';
 
-type Status = RunStatus | CheckStatus | 'never' | 'connected' | 'disconnected';
+type Status = RunStatus | CheckStatus | 'never' | 'connected' | 'disconnected' | 'already_running';
 
 const CONFIG: Record<Status, { label: string; color: string; bg: string; dot: string }> = {
-  pass:         { label: 'PASS',    color: '#16a34a', bg: '#dcfce7', dot: '#22c55e' },
-  fail:         { label: 'FAIL',    color: '#dc2626', bg: '#fee2e2', dot: '#ef4444' },
-  warning:      { label: 'WARN',    color: '#d97706', bg: '#fef3c7', dot: '#f59e0b' },
-  running:      { label: 'RUNNING', color: '#2563eb', bg: '#dbeafe', dot: '#3b82f6' },
-  skip:         { label: 'SKIP',    color: '#6b7280', bg: '#f3f4f6', dot: '#9ca3af' },
-  never:        { label: 'NEVER',   color: '#6b7280', bg: '#f3f4f6', dot: '#9ca3af' },
-  connected:    { label: 'LIVE',    color: '#16a34a', bg: '#dcfce7', dot: '#22c55e' },
-  disconnected: { label: 'OFF',     color: '#dc2626', bg: '#fee2e2', dot: '#ef4444' },
+  pass:            { label: 'PASS',    color: '#16a34a', bg: '#dcfce7', dot: '#22c55e' },
+  fail:            { label: 'FAIL',    color: '#dc2626', bg: '#fee2e2', dot: '#ef4444' },
+  warning:         { label: 'WARN',    color: '#d97706', bg: '#fef3c7', dot: '#f59e0b' },
+  running:         { label: 'RUNNING', color: '#2563eb', bg: '#dbeafe', dot: '#3b82f6' },
+  skip:            { label: 'SKIP',    color: '#6b7280', bg: '#f3f4f6', dot: '#9ca3af' },
+  never:           { label: 'NEVER',   color: '#6b7280', bg: '#f3f4f6', dot: '#9ca3af' },
+  connected:       { label: 'LIVE',    color: '#16a34a', bg: '#dcfce7', dot: '#22c55e' },
+  disconnected:    { label: 'OFF',     color: '#dc2626', bg: '#fee2e2', dot: '#ef4444' },
+  already_running: { label: 'UP',      color: '#0891b2', bg: '#e0f2fe', dot: '#06b6d4' },
 };
 
 interface Props {

@@ -2,14 +2,14 @@ import { spawn, ChildProcess, execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 
-export interface StartCommand {
+export interface ServiceCommand {
   name: string;
   cwd: string;
   command: string;
   url?: string;
 }
 
-export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped';
+export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped' | 'already_running';
 
 export interface ManagedService {
   id: string;
@@ -31,6 +31,8 @@ interface InternalService extends ManagedService {
 
 const registry = new Map<string, InternalService>();
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 export function makeServiceId(projectId: string, index: number): string {
   return `${projectId}::${index}`;
 }
@@ -41,12 +43,45 @@ function getLogPath(projectId: string): string {
   return path.join(logsDir, `${projectId}.log`);
 }
 
-function appendLog(svc: InternalService, line: string): void {
+const SECRET_PATTERN = /(?:api[_-]?key|token|password|secret|pwd|pass|auth|bearer|authorization)\s*[=:]\s*\S+/gi;
+const JWT_PATTERN    = /eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/g;
+
+function maskSecrets(line: string): string {
+  return line
+    .replace(SECRET_PATTERN, (m) => m.replace(/([=:]\s*)\S+/, '$1[MASKED]'))
+    .replace(JWT_PATTERN, 'eyJ[MASKED]');
+}
+
+function appendLog(svc: InternalService, raw: string): void {
+  const line = maskSecrets(raw);
   svc.logLines.push(line);
   if (svc.logLines.length > 500) svc.logLines.shift();
   try {
     fs.appendFileSync(getLogPath(svc.projectId), `[${new Date().toISOString()}] ${line}\n`);
   } catch { /* ignore file write errors */ }
+}
+
+function extractPort(url?: string): number | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.port) return parseInt(parsed.port, 10);
+    return parsed.protocol === 'https:' ? 443 : 80;
+  } catch {
+    return null;
+  }
+}
+
+function isPortInUse(port: number): boolean {
+  try {
+    const cmd = process.platform === 'win32'
+      ? `netstat -ano | findstr ":${port} "`
+      : `lsof -ti:${port}`;
+    const out = execSync(cmd, { stdio: 'pipe', encoding: 'utf-8', timeout: 3000 });
+    return out.trim().length > 0;
+  } catch {
+    return false;
+  }
 }
 
 function killPid(pid: number): void {
@@ -65,15 +100,18 @@ function toPublic(svc: InternalService): ManagedService {
   return rest;
 }
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export function startService(
   projectId: string,
   projectName: string,
-  cmd: StartCommand,
+  cmd: ServiceCommand,
   index: number,
   onChange: () => void
 ): ManagedService {
   const id = makeServiceId(projectId, index);
 
+  // Return existing running/starting service
   const existing = registry.get(id);
   if (existing?.status === 'running' || existing?.status === 'starting') {
     return toPublic(existing);
@@ -91,6 +129,17 @@ export function startService(
     logLines: [],
   };
   registry.set(id, svc);
+
+  // Check if port already occupied
+  const port = extractPort(cmd.url);
+  if (port && isPortInUse(port)) {
+    svc.status = 'already_running';
+    appendLog(svc, `[port] Port ${port} already in use — service may already be running`);
+    appendLog(svc, `[url] ${cmd.url ?? ''}`);
+    onChange();
+    return toPublic(svc);
+  }
+
   appendLog(svc, `[launcher] ${cmd.command} in ${cmd.cwd}`);
 
   try {
@@ -102,7 +151,7 @@ export function startService(
     });
 
     svc.proc = proc;
-    svc.pid = proc.pid;
+    svc.pid  = proc.pid;
 
     const handleOutput = (data: Buffer): void => {
       const text = data.toString();
@@ -117,11 +166,11 @@ export function startService(
     };
 
     proc.stdout?.on('data', handleOutput);
-    proc.stderr?.on('data', handleOutput); // Vite/webpack write to stderr too
+    proc.stderr?.on('data', handleOutput);
 
     proc.on('error', (err) => {
       svc.status = 'failed';
-      svc.error = err.message;
+      svc.error  = err.message;
       appendLog(svc, `[error] ${err.message}`);
       onChange();
     });
@@ -134,16 +183,16 @@ export function startService(
       }
     });
 
-    // Assume running after 4s if no crash yet
+    // Assume running after 5s if no crash yet
     setTimeout(() => {
       if (svc.status === 'starting') {
         svc.status = 'running';
         onChange();
       }
-    }, 4000);
+    }, 5000);
   } catch (e) {
     svc.status = 'failed';
-    svc.error = String(e);
+    svc.error  = String(e);
     appendLog(svc, `[crash] ${String(e)}`);
     onChange();
   }
@@ -155,7 +204,7 @@ export function stopService(id: string, onChange: () => void): void {
   const svc = registry.get(id);
   if (!svc) return;
   if (svc.pid) killPid(svc.pid);
-  svc.proc = undefined;
+  svc.proc   = undefined;
   svc.status = 'stopped';
   appendLog(svc, '[launcher] stopped by user');
   onChange();

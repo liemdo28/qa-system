@@ -54,6 +54,13 @@ export interface ProjectBuildConfig {
   enabled?: boolean;
 }
 
+export interface ServiceCommand {
+  name: string;
+  cwd: string;
+  command: string;
+  url?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -62,8 +69,8 @@ export interface Project {
   github?: string;
   type: string;
   commands?: ProjectCommands;
-  buildCommands?: string[];
   build?: ProjectBuildConfig;
+  services?: ServiceCommand[];
   url?: string;
   publicUrl?: string;
   adminUrl?: string;

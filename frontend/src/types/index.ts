@@ -50,15 +50,15 @@ export interface ProjectCommands {
   test?: string;
 }
 
-export interface StartCommand {
+export interface ProjectBuildConfig {
+  enabled?: boolean;
+}
+
+export interface ServiceCommand {
   name: string;
   cwd: string;
   command: string;
   url?: string;
-}
-
-export interface ProjectBuildConfig {
-  enabled?: boolean;
 }
 
 export interface Project {
@@ -71,14 +71,14 @@ export interface Project {
   enabled?: boolean;
   commands?: ProjectCommands;
   build?: ProjectBuildConfig;
-  startCommands?: StartCommand[];
+  services?: ServiceCommand[];
   url?: string;
   publicUrl?: string;
 }
 
 // ─── System management types ──────────────────────────────────────────────────
 
-export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped';
+export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped' | 'already_running';
 
 export interface ManagedService {
   id: string;

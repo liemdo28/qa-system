@@ -14,10 +14,11 @@ interface Props {
 }
 
 const STEPS = [
-  'Checking dependencies',
-  'Installing packages',
+  'Checking project config',
+  'Detecting project types',
+  'Installing dependencies',
   'Starting services',
-  'Ready for testing',
+  'All systems ready',
 ];
 
 function StepRow({ label, state }: { label: string; state: 'done' | 'active' | 'pending' }) {

@@ -4,12 +4,17 @@ import * as fs from 'fs-extra';
 import { execSync } from 'child_process';
 import {
   startService, stopAll, stopService,
-  getAllServices, getServiceLogs, StartCommand,
+  getAllServices, getServiceLogs, ServiceCommand,
 } from '../services/processManager';
 import { broadcast } from '../services/wsEmitter';
 import { WSMessage } from '../qa-engine/types';
+import { detectBuildType } from '../qa-engine/checks/buildCheck';
 
 const router = Router();
+
+interface BuildConfig {
+  enabled?: boolean;
+}
 
 interface ProjectConfig {
   id: string;
@@ -17,12 +22,16 @@ interface ProjectConfig {
   enabled?: boolean;
   localPath?: string;
   repo?: string;
+  type?: string;
   commands?: { install?: string };
-  startCommands?: StartCommand[];
+  build?: BuildConfig;
+  services?: ServiceCommand[];
 }
 
 function loadProjects(): ProjectConfig[] {
-  const cfg = fs.readJsonSync(path.join(__dirname, '../../config/projects.json')) as { projects: ProjectConfig[] };
+  const cfg = fs.readJsonSync(
+    path.join(__dirname, '../../config/projects.json')
+  ) as { projects: ProjectConfig[] };
   return cfg.projects;
 }
 
@@ -34,6 +43,14 @@ function emitStatus(): void {
   broadcast({ type: 'system_status', services: getAllServices() } as WSMessage);
 }
 
+function shouldInstall(p: ProjectConfig): boolean {
+  if (p.build?.enabled === false) return false;
+  if (!p.localPath) return false;
+  if (!fs.pathExistsSync(p.localPath)) return false;
+  if (!fs.pathExistsSync(path.join(p.localPath, 'package.json'))) return false;
+  return true;
+}
+
 let isStarting = false;
 
 // POST /api/system/start
@@ -43,49 +60,89 @@ router.post('/start', (req: Request, res: Response) => {
     return;
   }
   isStarting = true;
+
   const projects = loadProjects().filter((p) => p.enabled !== false);
   res.json({ status: 'starting', projectCount: projects.length });
 
   void (async () => {
     try {
-      const total = projects.length;
+      const TOTAL_STEPS = 5;
 
-      // Step 1 — install deps for projects missing node_modules
-      for (let i = 0; i < projects.length; i++) {
-        const p = projects[i];
-        emitProgress(i, total, `Checking ${p.name}…`);
+      // Step 1 — validate paths
+      emitProgress(1, TOTAL_STEPS, 'Checking project config…');
+      const validProjects: ProjectConfig[] = [];
+      for (const p of projects) {
+        if (!p.localPath) {
+          emitProgress(1, TOTAL_STEPS, `[warn] ${p.name} — no localPath configured`);
+          continue;
+        }
+        if (!fs.pathExistsSync(p.localPath)) {
+          emitProgress(1, TOTAL_STEPS, `[warn] ${p.name} — localPath not found: ${p.localPath}`);
+          continue;
+        }
+        validProjects.push(p);
+      }
 
-        if (p.localPath && fs.pathExistsSync(p.localPath)) {
-          const hasPkg = fs.pathExistsSync(path.join(p.localPath, 'package.json'));
-          const hasNm  = fs.pathExistsSync(path.join(p.localPath, 'node_modules'));
+      // Step 2 — detect types
+      emitProgress(2, TOTAL_STEPS, 'Detecting project types…');
+      for (const p of validProjects) {
+        if (!p.localPath) continue;
+        const detected = detectBuildType(p.localPath);
+        const effective = p.build?.enabled === false ? 'skip-build' : detected;
+        emitProgress(2, TOTAL_STEPS, `${p.name} → ${effective}`);
+      }
 
-          if (hasPkg && !hasNm) {
-            emitProgress(i, total, `Installing ${p.name} dependencies…`);
-            try {
-              const cmd = p.commands?.install ?? 'npm install';
-              execSync(cmd, { cwd: p.localPath, timeout: 180000, stdio: 'ignore' });
-              emitProgress(i, total, `${p.name} — dependencies installed`);
-            } catch {
-              emitProgress(i, total, `[warn] ${p.name} install failed — continuing`);
-            }
-          }
+      // Step 3 — install dependencies
+      emitProgress(3, TOTAL_STEPS, 'Installing dependencies where needed…');
+      for (const p of validProjects) {
+        if (!shouldInstall(p)) {
+          const reason = p.build?.enabled === false
+            ? 'build disabled'
+            : !fs.pathExistsSync(path.join(p.localPath ?? '', 'package.json'))
+            ? 'no package.json'
+            : 'localPath missing';
+          emitProgress(3, TOTAL_STEPS, `${p.name} — skipping install (${reason})`);
+          continue;
+        }
+
+        const nmPath = path.join(p.localPath!, 'node_modules');
+        if (fs.pathExistsSync(nmPath)) {
+          emitProgress(3, TOTAL_STEPS, `${p.name} — dependencies already installed`);
+          continue;
+        }
+
+        const installCmd = p.commands?.install ?? 'npm install';
+        emitProgress(3, TOTAL_STEPS, `${p.name} — installing (${installCmd})…`);
+        try {
+          execSync(installCmd, { cwd: p.localPath!, timeout: 180000, stdio: 'ignore' });
+          emitProgress(3, TOTAL_STEPS, `${p.name} — install complete`);
+        } catch {
+          emitProgress(3, TOTAL_STEPS, `[warn] ${p.name} — install failed, continuing`);
         }
       }
 
-      // Step 2 — start all services
-      emitProgress(total, total, 'Starting all services…');
+      // Step 4 — start services
+      emitProgress(4, TOTAL_STEPS, 'Starting services…');
       const onChange = (): void => emitStatus();
 
-      for (const p of projects) {
-        if (!p.startCommands?.length) continue;
-        for (let i = 0; i < p.startCommands.length; i++) {
-          startService(p.id, p.name, p.startCommands[i], i, onChange);
-          emitProgress(total, total, `Started: ${p.name} — ${p.startCommands[i].name}`);
+      for (const p of validProjects) {
+        if (!p.services?.length) {
+          emitProgress(4, TOTAL_STEPS, `${p.name} — no services configured`);
+          continue;
+        }
+        for (let i = 0; i < p.services.length; i++) {
+          const svc = p.services[i];
+          emitProgress(4, TOTAL_STEPS, `Starting: ${p.name} — ${svc.name}`);
+          startService(p.id, p.name, svc, i, onChange);
         }
       }
 
-      emitProgress(total, total, 'All systems ready!');
       emitStatus();
+
+      // Step 5 — done
+      emitProgress(TOTAL_STEPS, TOTAL_STEPS, 'All systems ready!');
+      emitStatus();
+
     } finally {
       isStarting = false;
     }
@@ -108,14 +165,14 @@ router.post('/stop/:serviceId', (req: Request, res: Response) => {
 // GET /api/system/status
 router.get('/status', (_req: Request, res: Response) => {
   const services = getAllServices();
-  const running  = services.filter((s) => s.status === 'running').length;
+  const running  = services.filter((s) => s.status === 'running' || s.status === 'already_running').length;
   const failed   = services.filter((s) => s.status === 'failed').length;
   const stopped  = services.filter((s) => s.status === 'stopped').length;
 
   let status = 'idle';
   if (services.length > 0) {
     if (failed > 0 && running === 0) status = 'failed';
-    else if (running === services.length - stopped) status = 'running';
+    else if (running > 0) status = running === services.length - stopped ? 'running' : 'partial';
     else status = 'partial';
   }
 
