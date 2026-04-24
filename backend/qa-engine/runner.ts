@@ -5,6 +5,8 @@ import { getAllServices } from '../services/processManager';
 import { runBuildCheck } from './checks/buildCheck';
 import { runLinkCheck } from './checks/linkCheck';
 import { runBrowserCheck } from './checks/browserCheck';
+import { enrichIssues } from './issueTemplates';
+import { saveReports } from './reportGenerator';
 import { Project, QAResult, RunStatus, CheckStatus } from './types';
 
 const activeRuns = new Set<string>();
@@ -157,7 +159,11 @@ export async function runQA(project: Project): Promise<string> {
       completedAt,
     };
 
+    // Enrich all issues with templates (whyItMatters, suggestedFix, etc.)
+    result.issues = enrichIssues(result.issues);
+
     saveResult(result);
+    saveReports(result);   // writes reports/{projectId}-{runId}.md + .json
     activeRuns.delete(project.id);
 
     emit(

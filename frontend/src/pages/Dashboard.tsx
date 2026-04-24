@@ -9,6 +9,7 @@ import { IssueList } from '../components/IssueList';
 import { LogStream } from '../components/LogStream';
 import { StartPanel } from '../components/StartPanel';
 import { LogModal } from '../components/LogModal';
+import { DevReport } from '../components/DevReport';
 
 interface Props {
   projects: Project[];
@@ -287,6 +288,11 @@ export function Dashboard({ projects }: Props) {
           </div>
         )}
       </main>
+
+      {/* ── Dev Report panel ── */}
+      {selectedResult && selectedProject && !isSelectedRunning && (
+        <DevReport result={selectedResult} projectId={selectedProject.id} />
+      )}
 
       {/* ── Log Modal ── */}
       {logModal && (

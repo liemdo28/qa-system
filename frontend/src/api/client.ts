@@ -34,6 +34,15 @@ export const api = {
     return get(`/results/${projectId}`);
   },
 
+  getReport(projectId: string): Promise<string> {
+    return fetch(`${API}/results/${projectId}/report`).then((r) => r.text());
+  },
+
+  downloadReport(projectId: string, format: 'md' | 'json'): void {
+    const suffix = format === 'json' ? '/download.json' : '/download';
+    window.open(`${API}/results/${projectId}/report${suffix}`, '_blank');
+  },
+
   runQA(projectId: string): Promise<{ runId: string; projectId: string }> {
     return post(`/run/${projectId}`);
   },

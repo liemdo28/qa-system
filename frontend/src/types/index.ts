@@ -13,6 +13,11 @@ export interface QAIssue {
   url?: string;
   message: string;
   severity: IssueSeverity;
+  // Enriched by issueTemplates
+  whyItMatters?: string;
+  suggestedFix?: string;
+  exampleFix?: string;
+  filesToCheck?: string[];
 }
 
 export interface QASummary {
