@@ -17,6 +17,20 @@ app.use('/api/projects', projectsRouter);
 app.use('/api/run', runRouter);
 app.use('/api/results', resultsRouter);
 
+app.get('/api', (_req, res) => {
+  res.json({
+    name: 'QA Control Center API',
+    status: 'running',
+    uptime: Math.round(process.uptime()),
+    routes: {
+      projects: 'GET /api/projects',
+      run:      'POST /api/run/:projectId',
+      results:  'GET /api/results/:projectId',
+      health:   'GET /api/health',
+    },
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
