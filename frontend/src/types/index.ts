@@ -29,6 +29,13 @@ export interface QAMetrics {
   loadTimeMs?: number;
   linksChecked?: number;
   brokenLinksCount?: number;
+  qaUrl?: string;
+  qaUrlSource?: 'local' | 'live';
+  seoSkipReason?: string;
+}
+
+export interface ProjectQAConfig {
+  entry?: string;
 }
 
 export interface QAResult {
@@ -71,6 +78,7 @@ export interface Project {
   enabled?: boolean;
   commands?: ProjectCommands;
   build?: ProjectBuildConfig;
+  qa?: ProjectQAConfig;
   services?: ServiceCommand[];
   url?: string;
   publicUrl?: string;

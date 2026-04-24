@@ -1,4 +1,5 @@
 import { spawn, ChildProcess, execSync } from 'child_process';
+import * as net from 'net';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 
@@ -70,6 +71,17 @@ function extractPort(url?: string): number | null {
   } catch {
     return null;
   }
+}
+
+function pingPort(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const sock = new net.Socket();
+    sock.setTimeout(2000);
+    sock.on('connect', () => { sock.destroy(); resolve(true); });
+    sock.on('error',   () => resolve(false));
+    sock.on('timeout', () => { sock.destroy(); resolve(false); });
+    sock.connect(port, '127.0.0.1');
+  });
 }
 
 function isPortInUse(port: number): boolean {
@@ -176,11 +188,19 @@ export function startService(
     });
 
     proc.on('close', (code) => {
-      if (svc.status !== 'stopped') {
-        svc.status = code === 0 || code === null ? 'stopped' : 'failed';
-        appendLog(svc, `[exit] code ${code ?? 'null'}`);
+      if (svc.status === 'stopped') return;
+      appendLog(svc, `[exit] code ${code ?? 'null'}`);
+      const port = extractPort(svc.url);
+      void (async () => {
+        // Port still live → service may have restarted or is served by another process
+        if (port && await pingPort(port)) {
+          svc.status = 'already_running';
+          appendLog(svc, `[port] Port ${port} still responding after exit — marking as already_running`);
+        } else {
+          svc.status = code === 0 || code === null ? 'stopped' : 'failed';
+        }
         onChange();
-      }
+      })();
     });
 
     // Assume running after 5s if no crash yet

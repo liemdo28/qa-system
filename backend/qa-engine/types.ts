@@ -22,6 +22,9 @@ export interface QAMetrics {
   loadTimeMs?: number;
   linksChecked?: number;
   brokenLinksCount?: number;
+  qaUrl?: string;
+  qaUrlSource?: 'local' | 'live';
+  seoSkipReason?: string;
 }
 
 export interface QASummary {
@@ -54,6 +57,10 @@ export interface ProjectBuildConfig {
   enabled?: boolean;
 }
 
+export interface ProjectQAConfig {
+  entry?: string;
+}
+
 export interface ServiceCommand {
   name: string;
   cwd: string;
@@ -70,6 +77,7 @@ export interface Project {
   type: string;
   commands?: ProjectCommands;
   build?: ProjectBuildConfig;
+  qa?: ProjectQAConfig;
   services?: ServiceCommand[];
   url?: string;
   publicUrl?: string;
@@ -93,7 +101,7 @@ export interface ResultMessage {
 
 // ─── System management types ────────────────────────────────────────────────
 
-export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped';
+export type ServiceStatus = 'starting' | 'running' | 'failed' | 'stopped' | 'already_running';
 
 export interface ManagedService {
   id: string;

@@ -22,6 +22,7 @@ function metricLabel(key: string, result: QAResult): string {
   if (key === 'links' && m.linksChecked) return `${m.brokenLinksCount ?? 0} broken / ${m.linksChecked} checked`;
   if (key === 'performance' && m.loadTimeMs) return `${m.loadTimeMs}ms load`;
   if (key === 'seo') {
+    if (status === 'skip') return m.seoSkipReason ? 'Skipped — auth required (login redirect)' : 'Skipped';
     const seoIssues = result.issues.filter((i) => i.type === 'seo_missing').length;
     return seoIssues > 0 ? `${seoIssues} issue${seoIssues > 1 ? 's' : ''}` : 'All tags present';
   }

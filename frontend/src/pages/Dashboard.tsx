@@ -217,7 +217,16 @@ export function Dashboard({ projects }: Props) {
                       Last run {new Date(selectedResult.completedAt).toLocaleString()}
                     </span>
                   )}
-                  {selectedProject.url && (
+                  {selectedResult?.metrics.qaUrl && !isSelectedRunning && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+                      background: selectedResult.metrics.qaUrlSource === 'local' ? 'rgba(22,163,74,0.12)' : 'rgba(99,102,241,0.12)',
+                      color: selectedResult.metrics.qaUrlSource === 'local' ? '#16a34a' : '#6366f1',
+                    }}>
+                      Testing [{selectedResult.metrics.qaUrlSource?.toUpperCase() ?? 'LIVE'}] {selectedResult.metrics.qaUrl}
+                    </span>
+                  )}
+                  {!selectedResult && selectedProject.url && (
                     <a
                       href={selectedProject.url}
                       target="_blank"

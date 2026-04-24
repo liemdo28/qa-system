@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { broadcast } from '../services/wsEmitter';
 import { saveResult } from '../services/resultStore';
+import { getAllServices } from '../services/processManager';
 import { runBuildCheck } from './checks/buildCheck';
 import { runLinkCheck } from './checks/linkCheck';
 import { runBrowserCheck } from './checks/browserCheck';
@@ -28,16 +29,41 @@ function overallStatus(summary: { build: CheckStatus; links: CheckStatus; seo: C
   const values = Object.values(summary);
   if (values.includes('fail')) return 'fail';
   if (values.includes('warning')) return 'warning';
-  // If every check was skipped, consider it a warning (nothing verified)
   if (values.every((v) => v === 'skip')) return 'warning';
   return 'pass';
+}
+
+interface QATarget {
+  url: string;
+  source: 'local' | 'live';
+}
+
+function resolveQAUrl(project: Project): QATarget | null {
+  const entry = project.qa?.entry ?? '/';
+  const entryPath = entry === '/' ? '' : (entry.startsWith('/') ? entry : `/${entry}`);
+
+  // Prefer a running local service for this project
+  const services = getAllServices();
+  const running = services.find(
+    (s) => s.projectId === project.id &&
+           (s.status === 'running' || s.status === 'already_running') &&
+           s.url
+  );
+
+  if (running?.url) {
+    return { url: `${running.url.replace(/\/$/, '')}${entryPath}`, source: 'local' };
+  }
+
+  // Fallback: live URL from config
+  const liveBase = project.url ?? project.publicUrl ?? project.adminUrl;
+  if (!liveBase) return null;
+  return { url: `${liveBase.replace(/\/$/, '')}${entryPath}`, source: 'live' };
 }
 
 export async function runQA(project: Project): Promise<string> {
   const runId = uuidv4();
   activeRuns.add(project.id);
 
-  // Run async, don't await — returns runId immediately
   void (async () => {
     const emit = makeEmit(runId);
     const startedAt = new Date().toISOString();
@@ -49,7 +75,7 @@ export async function runQA(project: Project): Promise<string> {
     const summary = {
       build: 'skip' as CheckStatus,
       links: 'skip' as CheckStatus,
-      seo: 'skip' as CheckStatus,
+      seo:   'skip' as CheckStatus,
       performance: 'skip' as CheckStatus,
     };
     const metrics: QAResult['metrics'] = {};
@@ -60,23 +86,35 @@ export async function runQA(project: Project): Promise<string> {
       const build = await runBuildCheck(project, emit);
       summary.build = build.status;
       metrics.buildTimeMs = build.buildTimeMs;
-      if (build.detectedType)  metrics.buildDetectedType = build.detectedType;
-      if (build.skipReason)    metrics.buildSkipReason   = build.skipReason;
+      if (build.detectedType) metrics.buildDetectedType = build.detectedType;
+      if (build.skipReason)   metrics.buildSkipReason   = build.skipReason;
       issues.push(...build.issues);
     } catch (e) {
       emit('error', `Build check crashed: ${String(e)}`);
       summary.build = 'fail';
     }
 
-    const targetUrl = project.url ?? project.publicUrl ?? project.adminUrl;
+    // Resolve target URL (local service first, then live fallback)
+    const target = resolveQAUrl(project);
+
+    if (!target) {
+      emit('warn', 'No URL configured — skipping link, SEO, and performance checks');
+    } else {
+      metrics.qaUrl       = target.url;
+      metrics.qaUrlSource = target.source;
+      emit('info', `Testing [${target.source.toUpperCase()}] ${target.url}`);
+      if (project.qa?.entry && project.qa.entry !== '/') {
+        emit('info', `Entry path: ${project.qa.entry}`);
+      }
+    }
 
     // 2. Link check
-    if (targetUrl) {
+    if (target) {
       try {
         emit('info', '── LINK CHECK ──');
-        const links = await runLinkCheck(targetUrl, emit);
+        const links = await runLinkCheck(target.url, emit);
         summary.links = links.status;
-        metrics.linksChecked = links.linksChecked;
+        metrics.linksChecked     = links.linksChecked;
         metrics.brokenLinksCount = links.brokenLinksCount;
         issues.push(...links.issues);
       } catch (e) {
@@ -86,19 +124,20 @@ export async function runQA(project: Project): Promise<string> {
     }
 
     // 3. Browser check (SEO + performance + console errors)
-    if (targetUrl) {
+    if (target) {
       try {
         emit('info', '── BROWSER CHECK (SEO + PERFORMANCE) ──');
-        const browser = await runBrowserCheck(targetUrl, emit);
-        summary.seo = browser.seo.status;
+        const browser = await runBrowserCheck(target.url, emit);
+        summary.seo         = browser.seo.status;
         summary.performance = browser.performance.status;
-        metrics.loadTimeMs = browser.performance.loadTimeMs;
+        metrics.loadTimeMs  = browser.performance.loadTimeMs;
+        if (browser.seo.skipReason) metrics.seoSkipReason = browser.seo.skipReason;
         issues.push(...browser.seo.issues);
         issues.push(...browser.performance.issues);
         issues.push(...browser.consoleErrors);
       } catch (e) {
         emit('error', `Browser check crashed: ${String(e)}`);
-        summary.seo = 'fail';
+        summary.seo         = 'fail';
         summary.performance = 'fail';
       }
     }
@@ -121,8 +160,10 @@ export async function runQA(project: Project): Promise<string> {
     saveResult(result);
     activeRuns.delete(project.id);
 
-    emit(status === 'pass' ? 'success' : status === 'warning' ? 'warn' : 'error',
-      `── QA COMPLETE: ${status.toUpperCase()} — ${issues.length} issue(s) found ──`);
+    emit(
+      status === 'pass' ? 'success' : status === 'warning' ? 'warn' : 'error',
+      `── QA COMPLETE: ${status.toUpperCase()} — ${issues.length} issue(s) found ──`
+    );
 
     broadcast({ type: 'result', runId, projectId: project.id, data: result });
   })();
