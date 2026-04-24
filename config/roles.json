@@ -1,0 +1,40 @@
+{
+  "roles": [
+    {
+      "name": "CEO",
+      "envEmail": "QA_CEO_EMAIL",
+      "envPassword": "QA_CEO_PASSWORD",
+      "goal": "Check business overview, risk, revenue impact, project health, and decision summary."
+    },
+    {
+      "name": "Admin",
+      "envEmail": "QA_ADMIN_EMAIL",
+      "envPassword": "QA_ADMIN_PASSWORD",
+      "goal": "Check full control, permission, settings, user management, and system configuration."
+    },
+    {
+      "name": "Marketing",
+      "envEmail": "QA_MARKETING_EMAIL",
+      "envPassword": "QA_MARKETING_PASSWORD",
+      "goal": "Check content edit, link edit, publish flow, scheduling, image upload, campaign flow."
+    },
+    {
+      "name": "Accounting",
+      "envEmail": "QA_ACCOUNTING_EMAIL",
+      "envPassword": "QA_ACCOUNTING_PASSWORD",
+      "goal": "Check reports, exports, imports, financial data safety, and permission boundaries."
+    },
+    {
+      "name": "Store Manager",
+      "envEmail": "QA_STORE_MANAGER_EMAIL",
+      "envPassword": "QA_STORE_MANAGER_PASSWORD",
+      "goal": "Check daily operation, task visibility, store-specific access, and action flow."
+    },
+    {
+      "name": "User",
+      "envEmail": "QA_USER_EMAIL",
+      "envPassword": "QA_USER_PASSWORD",
+      "goal": "Check simple user experience, mobile usability, clear buttons, error states, and completion flow."
+    }
+  ]
+}

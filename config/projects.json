@@ -1,0 +1,45 @@
+{
+  "projects": [
+    {
+      "name": "Bakudan Website Sub",
+      "localPath": "E:\\Project\\Master\\BakudanWebsite_Sub",
+      "github": "https://github.com/liemdo28/bakudanwebsite_sub",
+      "type": "website",
+      "publicUrl": "https://www.bakudanramen.com",
+      "adminUrl": "https://www.bakudanramen.com/links-admin/#/dashboard",
+      "buildCommands": ["npm install", "npm run build"],
+      "testLevels": ["source", "build", "ui", "role", "stress"]
+    },
+    {
+      "name": "Raw Website",
+      "localPath": "E:\\Project\\Master\\RawWebsite",
+      "github": "https://github.com/liemdo28/rawwebsite",
+      "type": "website",
+      "publicUrl": "https://rawsushibar.com",
+      "buildCommands": ["npm install", "npm run build"],
+      "testLevels": ["source", "build", "ui", "seo", "stress"]
+    },
+    {
+      "name": "Dashboard Bakudan",
+      "localPath": "E:\\Project\\Master\\dashboard.bakudanramen.com",
+      "github": "https://github.com/liemdo28/dashboard.bakudanramen.com",
+      "type": "dashboard",
+      "publicUrl": "https://dashboard.bakudanramen.com",
+      "testLevels": ["source", "build", "ui", "api", "role", "stress"]
+    },
+    {
+      "name": "Review Automation System",
+      "localPath": "E:\\Project\\Master\\review-automation-system",
+      "github": "https://github.com/liemdo28/review-automation-system",
+      "type": "internal-tool",
+      "testLevels": ["source", "build", "ui", "role", "stress"]
+    },
+    {
+      "name": "Packing List",
+      "localPath": "E:\\Project\\Master\\packing-list",
+      "github": "https://github.com/liemdo28/packing-list",
+      "type": "operation-system",
+      "testLevels": ["source", "build", "ui", "api", "role", "stress"]
+    }
+  ]
+}

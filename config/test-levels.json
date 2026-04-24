@@ -1,0 +1,40 @@
+{
+  "levels": {
+    "source": {
+      "description": "Scan local source code for health, secrets, and structure",
+      "checks": ["file_exists", "git_status", "secret_scan", "package_json", "env_committed"]
+    },
+    "build": {
+      "description": "Run install, build, and test commands",
+      "checks": ["npm_install", "npm_build", "npm_test", "build_output"]
+    },
+    "ui": {
+      "description": "Playwright browser walkthrough of all key pages and components",
+      "checks": [
+        "homepage", "login_page", "dashboard", "sidebar", "header",
+        "navigation", "buttons", "forms", "modals", "tables",
+        "search", "filter", "upload", "export", "mobile_layout",
+        "error_state", "empty_state", "loading_state"
+      ]
+    },
+    "api": {
+      "description": "Test backend API endpoints for response, auth, and data integrity",
+      "checks": ["endpoint_reachable", "auth_required", "response_format", "error_handling"]
+    },
+    "seo": {
+      "description": "Run Lighthouse SEO and performance audit",
+      "checks": ["meta_tags", "og_tags", "page_speed", "mobile_score", "accessibility"]
+    },
+    "role": {
+      "description": "Simulate each role login and verify permission boundaries",
+      "checks": ["login_success", "dashboard_access", "permission_boundary", "action_flow"]
+    },
+    "stress": {
+      "description": "Run concurrent user simulation and measure stability",
+      "checks": [
+        "login_flow", "dashboard_loading", "repeated_clicks", "api_endpoints",
+        "form_submit", "search_filter", "concurrent_users", "long_session"
+      ]
+    }
+  }
+}
