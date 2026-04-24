@@ -24,6 +24,8 @@ export interface QASummary {
 
 export interface QAMetrics {
   buildTimeMs?: number;
+  buildDetectedType?: string;
+  buildSkipReason?: string;
   loadTimeMs?: number;
   linksChecked?: number;
   brokenLinksCount?: number;
@@ -55,6 +57,10 @@ export interface StartCommand {
   url?: string;
 }
 
+export interface ProjectBuildConfig {
+  enabled?: boolean;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -64,6 +70,7 @@ export interface Project {
   type: string;
   enabled?: boolean;
   commands?: ProjectCommands;
+  build?: ProjectBuildConfig;
   startCommands?: StartCommand[];
   url?: string;
   publicUrl?: string;

@@ -5,7 +5,7 @@
       "name": "Bakudan Website",
       "repo": "https://github.com/liemdo28/bakudanwebsite_sub",
       "github": "https://github.com/liemdo28/bakudanwebsite_sub",
-      "localPath": "E:\\Project\\Master\\BakudanWebsite_Sub",
+      "localPath": "E:/Project/Master/BakudanWebsite_Sub",
       "type": "website",
       "enabled": true,
       "commands": {
@@ -15,7 +15,7 @@
       "startCommands": [
         {
           "name": "Dev Server",
-          "cwd": "E:\\Project\\Master\\BakudanWebsite_Sub",
+          "cwd": "E:/Project/Master/BakudanWebsite_Sub",
           "command": "npm run dev -- --port 5001",
           "url": "http://localhost:5001"
         }
@@ -30,7 +30,7 @@
       "name": "Raw Sushi Website",
       "repo": "https://github.com/liemdo28/rawwebsite",
       "github": "https://github.com/liemdo28/rawwebsite",
-      "localPath": "E:\\Project\\Master\\RawWebsite",
+      "localPath": "E:/Project/Master/RawWebsite",
       "type": "website",
       "enabled": true,
       "commands": {
@@ -40,7 +40,7 @@
       "startCommands": [
         {
           "name": "Dev Server",
-          "cwd": "E:\\Project\\Master\\RawWebsite",
+          "cwd": "E:/Project/Master/RawWebsite",
           "command": "npm run dev -- --port 5002",
           "url": "http://localhost:5002"
         }
@@ -54,17 +54,16 @@
       "name": "Bakudan Dashboard",
       "repo": "https://github.com/liemdo28/dashboard.bakudanramen.com",
       "github": "https://github.com/liemdo28/dashboard.bakudanramen.com",
-      "localPath": "E:\\Project\\Master\\dashboard.bakudanramen.com",
+      "localPath": "E:/Project/Master/dashboard.bakudanramen.com",
       "type": "dashboard",
       "enabled": true,
-      "commands": {
-        "install": "npm install",
-        "build": "npm run build"
+      "build": {
+        "enabled": false
       },
       "startCommands": [
         {
           "name": "Dev Server",
-          "cwd": "E:\\Project\\Master\\dashboard.bakudanramen.com",
+          "cwd": "E:/Project/Master/dashboard.bakudanramen.com",
           "command": "npm run dev -- --port 5003",
           "url": "http://localhost:5003"
         }
@@ -78,7 +77,7 @@
       "name": "Review Automation System",
       "repo": "https://github.com/liemdo28/review-automation-system",
       "github": "https://github.com/liemdo28/review-automation-system",
-      "localPath": "E:\\Project\\Master\\review-automation-system",
+      "localPath": "E:/Project/Master/review-automation-system",
       "type": "internal-tool",
       "enabled": true,
       "commands": {
@@ -88,7 +87,7 @@
       "startCommands": [
         {
           "name": "Dev Server",
-          "cwd": "E:\\Project\\Master\\review-automation-system",
+          "cwd": "E:/Project/Master/review-automation-system",
           "command": "npm run dev -- --port 5004",
           "url": "http://localhost:5004"
         }
@@ -100,7 +99,7 @@
       "name": "Packing List",
       "repo": "https://github.com/liemdo28/packing-list",
       "github": "https://github.com/liemdo28/packing-list",
-      "localPath": "E:\\Project\\Master\\packing-list",
+      "localPath": "E:/Project/Master/packing-list",
       "type": "operation-system",
       "enabled": true,
       "commands": {
@@ -110,7 +109,7 @@
       "startCommands": [
         {
           "name": "Dev Server",
-          "cwd": "E:\\Project\\Master\\packing-list",
+          "cwd": "E:/Project/Master/packing-list",
           "command": "npm run dev -- --port 5005",
           "url": "http://localhost:5005"
         }

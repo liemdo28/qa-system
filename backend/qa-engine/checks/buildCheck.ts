@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 import { CheckStatus, QAIssue, Project } from '../types';
 
 export interface BuildCheckResult {
@@ -7,8 +8,28 @@ export interface BuildCheckResult {
   buildTimeMs: number;
   installSuccess: boolean;
   buildSuccess: boolean;
+  detectedType?: string;
+  skipReason?: string;
   issues: QAIssue[];
 }
+
+export type ProjectBuildType = 'node' | 'php' | 'python' | 'static' | 'unknown';
+
+export function detectBuildType(localPath: string): ProjectBuildType {
+  if (fs.existsSync(path.join(localPath, 'package.json')))    return 'node';
+  if (fs.existsSync(path.join(localPath, 'composer.json')))   return 'php';
+  if (fs.existsSync(path.join(localPath, 'requirements.txt')) ||
+      fs.existsSync(path.join(localPath, 'pyproject.toml')))  return 'python';
+  if (fs.existsSync(path.join(localPath, 'index.html')))      return 'static';
+  return 'unknown';
+}
+
+const SKIP_REASON: Record<string, string> = {
+  php:     'PHP/Laravel project (composer.json) — no Node build required',
+  python:  'Python project (requirements.txt/pyproject.toml) — no Node build required',
+  static:  'Static site (index.html, no package.json) — no Node build required',
+  unknown: 'No package.json found — skipping Node build',
+};
 
 function runCmd(cmd: string, cwd: string, timeoutMs = 120000): { success: boolean; output: string } {
   try {
@@ -27,52 +48,89 @@ export async function runBuildCheck(
   const issues: QAIssue[] = [];
   const start = Date.now();
 
-  const localPath = project.localPath;
-  if (!localPath || !fs.existsSync(localPath)) {
-    emit('warn', 'No local path — skipping build check');
-    return { status: 'skip', buildTimeMs: 0, installSuccess: false, buildSuccess: false, issues };
+  // Explicit opt-out via config
+  if (project.build?.enabled === false) {
+    const reason = 'Build disabled in project config';
+    emit('info', `Skipped — ${reason}`);
+    return { status: 'skip', buildTimeMs: 0, installSuccess: false, buildSuccess: false, skipReason: reason, issues };
   }
 
-  // Determine install and build commands
-  const installCmd = project.commands?.install ?? (project.buildCommands?.[0] ?? 'npm install');
-  const buildCmd = project.commands?.build ?? (project.buildCommands?.[1] ?? null);
+  const localPath = project.localPath;
+  if (!localPath || !fs.existsSync(localPath)) {
+    const reason = 'Local path not configured or does not exist';
+    emit('warn', `Skipped — ${reason}`);
+    return { status: 'skip', buildTimeMs: 0, installSuccess: false, buildSuccess: false, skipReason: reason, issues };
+  }
 
+  // Auto-detect project type from filesystem
+  const detectedType = detectBuildType(localPath);
+
+  if (detectedType !== 'node') {
+    const reason = SKIP_REASON[detectedType] ?? 'No Node build required';
+    emit('info', `Skipped — ${reason}`);
+    return {
+      status: 'skip',
+      buildTimeMs: 0,
+      installSuccess: false,
+      buildSuccess: false,
+      detectedType,
+      skipReason: reason,
+      issues,
+    };
+  }
+
+  // Node project — run install then build
+  const installCmd = project.commands?.install ?? 'npm install';
+  const buildCmd   = project.commands?.build   ?? null;
+
+  emit('info', `Detected: Node.js project`);
   emit('info', `Installing dependencies: ${installCmd}`);
   const installResult = runCmd(installCmd, localPath);
-  const installSuccess = installResult.success;
 
-  if (!installSuccess) {
+  if (!installResult.success) {
     emit('error', `Install failed: ${installResult.output.substring(0, 300)}`);
     issues.push({
       type: 'build_error',
       message: `npm install failed: ${installResult.output.substring(0, 200)}`,
       severity: 'critical',
     });
-  } else {
-    emit('success', 'Install complete');
+    return {
+      status: 'fail',
+      buildTimeMs: Date.now() - start,
+      installSuccess: false,
+      buildSuccess: false,
+      detectedType,
+      issues,
+    };
   }
 
-  let buildSuccess = true;
-  if (buildCmd && installSuccess) {
-    emit('info', `Building: ${buildCmd}`);
-    const buildResult = runCmd(buildCmd, localPath, 180000);
-    buildSuccess = buildResult.success;
+  emit('success', 'Install complete');
 
-    if (!buildSuccess) {
-      emit('error', `Build failed: ${buildResult.output.substring(0, 300)}`);
-      issues.push({
-        type: 'build_error',
-        message: `Build failed: ${buildResult.output.substring(0, 200)}`,
-        severity: 'critical',
-      });
-    } else {
-      emit('success', `Build complete (${Date.now() - start}ms)`);
-    }
+  if (!buildCmd) {
+    return { status: 'pass', buildTimeMs: Date.now() - start, installSuccess: true, buildSuccess: true, detectedType, issues };
+  }
+
+  emit('info', `Building: ${buildCmd}`);
+  const buildResult = runCmd(buildCmd, localPath, 180000);
+
+  if (!buildResult.success) {
+    emit('error', `Build failed: ${buildResult.output.substring(0, 300)}`);
+    issues.push({
+      type: 'build_error',
+      message: `Build failed: ${buildResult.output.substring(0, 200)}`,
+      severity: 'critical',
+    });
+    return {
+      status: 'fail',
+      buildTimeMs: Date.now() - start,
+      installSuccess: true,
+      buildSuccess: false,
+      detectedType,
+      issues,
+    };
   }
 
   const buildTimeMs = Date.now() - start;
-  let status: CheckStatus = 'pass';
-  if (!installSuccess || !buildSuccess) status = 'fail';
-
-  return { status, buildTimeMs, installSuccess, buildSuccess, issues };
+  emit('success', `Build complete (${buildTimeMs}ms)`);
+  return { status: 'pass', buildTimeMs, installSuccess: true, buildSuccess: true, detectedType, issues };
 }

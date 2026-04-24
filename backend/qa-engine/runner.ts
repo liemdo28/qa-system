@@ -28,6 +28,8 @@ function overallStatus(summary: { build: CheckStatus; links: CheckStatus; seo: C
   const values = Object.values(summary);
   if (values.includes('fail')) return 'fail';
   if (values.includes('warning')) return 'warning';
+  // If every check was skipped, consider it a warning (nothing verified)
+  if (values.every((v) => v === 'skip')) return 'warning';
   return 'pass';
 }
 
@@ -58,6 +60,8 @@ export async function runQA(project: Project): Promise<string> {
       const build = await runBuildCheck(project, emit);
       summary.build = build.status;
       metrics.buildTimeMs = build.buildTimeMs;
+      if (build.detectedType)  metrics.buildDetectedType = build.detectedType;
+      if (build.skipReason)    metrics.buildSkipReason   = build.skipReason;
       issues.push(...build.issues);
     } catch (e) {
       emit('error', `Build check crashed: ${String(e)}`);

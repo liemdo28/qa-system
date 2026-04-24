@@ -14,7 +14,11 @@ const CHECK_META: { key: keyof QAResult['summary']; label: string; icon: string 
 
 function metricLabel(key: string, result: QAResult): string {
   const m = result.metrics;
-  if (key === 'build' && m.buildTimeMs) return `${(m.buildTimeMs / 1000).toFixed(1)}s`;
+  const status = result.summary[key as keyof QAResult['summary']];
+  if (key === 'build') {
+    if (status === 'skip') return m.buildSkipReason ?? 'Skipped — no Node build required';
+    if (m.buildTimeMs) return `${(m.buildTimeMs / 1000).toFixed(1)}s`;
+  }
   if (key === 'links' && m.linksChecked) return `${m.brokenLinksCount ?? 0} broken / ${m.linksChecked} checked`;
   if (key === 'performance' && m.loadTimeMs) return `${m.loadTimeMs}ms load`;
   if (key === 'seo') {

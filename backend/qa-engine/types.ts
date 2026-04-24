@@ -17,6 +17,8 @@ export interface QAIssue {
 
 export interface QAMetrics {
   buildTimeMs?: number;
+  buildDetectedType?: string;
+  buildSkipReason?: string;
   loadTimeMs?: number;
   linksChecked?: number;
   brokenLinksCount?: number;
@@ -48,6 +50,10 @@ export interface ProjectCommands {
   test?: string;
 }
 
+export interface ProjectBuildConfig {
+  enabled?: boolean;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -57,6 +63,7 @@ export interface Project {
   type: string;
   commands?: ProjectCommands;
   buildCommands?: string[];
+  build?: ProjectBuildConfig;
   url?: string;
   publicUrl?: string;
   adminUrl?: string;
