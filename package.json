@@ -4,31 +4,44 @@
   "description": "Internal QA Department Automation System",
   "main": "dist/index.js",
   "scripts": {
+    "dev": "concurrently -n \"backend,frontend\" -c \"cyan,magenta\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "ts-node --project backend/tsconfig.json backend/server.ts",
+    "start:frontend": "cd frontend && npm run dev",
     "build": "tsc",
     "qa": "ts-node src/index.ts",
     "qa:fast": "ts-node src/index.ts --levels source,build",
     "qa:ui": "ts-node src/index.ts --levels ui,role",
     "qa:stress": "ts-node src/index.ts --levels stress",
     "report": "ts-node src/index.ts --report-only",
-    "typecheck": "tsc --noEmit",
-    "test": "echo \"Run: npm run qa\""
+    "typecheck": "tsc --noEmit && cd frontend && npm run typecheck",
+    "test": "echo \"Run: npm run dev\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.15.2",
     "chalk": "^4.1.2",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.4",
     "playwright": "^1.59.1",
     "simple-git": "^3.36.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "uuid": "^14.0.0",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^25.6.0"
+    "@types/node": "^25.6.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1"
   }
 }

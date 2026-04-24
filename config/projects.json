@@ -1,44 +1,75 @@
 {
   "projects": [
     {
-      "name": "Bakudan Website Sub",
-      "localPath": "E:\\Project\\Master\\BakudanWebsite_Sub",
+      "id": "bakudan-website",
+      "name": "Bakudan Website",
+      "repo": "https://github.com/liemdo28/bakudanwebsite_sub",
       "github": "https://github.com/liemdo28/bakudanwebsite_sub",
+      "localPath": "E:\\Project\\Master\\BakudanWebsite_Sub",
       "type": "website",
+      "commands": {
+        "install": "npm install",
+        "build": "npm run build"
+      },
+      "url": "https://www.bakudanramen.com",
       "publicUrl": "https://www.bakudanramen.com",
       "adminUrl": "https://www.bakudanramen.com/links-admin/#/dashboard",
-      "buildCommands": ["npm install", "npm run build"],
       "testLevels": ["source", "build", "ui", "role", "stress"]
     },
     {
-      "name": "Raw Website",
-      "localPath": "E:\\Project\\Master\\RawWebsite",
+      "id": "raw-website",
+      "name": "Raw Sushi Website",
+      "repo": "https://github.com/liemdo28/rawwebsite",
       "github": "https://github.com/liemdo28/rawwebsite",
+      "localPath": "E:\\Project\\Master\\RawWebsite",
       "type": "website",
+      "commands": {
+        "install": "npm install",
+        "build": "npm run build"
+      },
+      "url": "https://rawsushibar.com",
       "publicUrl": "https://rawsushibar.com",
-      "buildCommands": ["npm install", "npm run build"],
       "testLevels": ["source", "build", "ui", "seo", "stress"]
     },
     {
-      "name": "Dashboard Bakudan",
-      "localPath": "E:\\Project\\Master\\dashboard.bakudanramen.com",
+      "id": "bakudan-dashboard",
+      "name": "Bakudan Dashboard",
+      "repo": "https://github.com/liemdo28/dashboard.bakudanramen.com",
       "github": "https://github.com/liemdo28/dashboard.bakudanramen.com",
+      "localPath": "E:\\Project\\Master\\dashboard.bakudanramen.com",
       "type": "dashboard",
+      "commands": {
+        "install": "npm install",
+        "build": "npm run build"
+      },
+      "url": "https://dashboard.bakudanramen.com",
       "publicUrl": "https://dashboard.bakudanramen.com",
       "testLevels": ["source", "build", "ui", "api", "role", "stress"]
     },
     {
+      "id": "review-automation",
       "name": "Review Automation System",
-      "localPath": "E:\\Project\\Master\\review-automation-system",
+      "repo": "https://github.com/liemdo28/review-automation-system",
       "github": "https://github.com/liemdo28/review-automation-system",
+      "localPath": "E:\\Project\\Master\\review-automation-system",
       "type": "internal-tool",
+      "commands": {
+        "install": "npm install",
+        "build": "npm run build"
+      },
       "testLevels": ["source", "build", "ui", "role", "stress"]
     },
     {
+      "id": "packing-list",
       "name": "Packing List",
-      "localPath": "E:\\Project\\Master\\packing-list",
+      "repo": "https://github.com/liemdo28/packing-list",
       "github": "https://github.com/liemdo28/packing-list",
+      "localPath": "E:\\Project\\Master\\packing-list",
       "type": "operation-system",
+      "commands": {
+        "install": "npm install",
+        "build": "npm run build"
+      },
       "testLevels": ["source", "build", "ui", "api", "role", "stress"]
     }
   ]
